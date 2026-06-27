@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>莫晨路径一键隐藏</title>
+	<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+	<header class="topbar">
+		<div>
+			<h1>莫晨路径一键隐藏</h1>
+			<p id="statusText">正在读取状态...</p>
+		</div>
+		<div class="topActions">
+			<button id="refreshBtn" type="button">刷新</button>
+			<a class="iconButton" href="https://github.com/Andrea-lyz/LKM-PathMask" target="_blank" rel="noopener" aria-label="打开 GitHub 项目" title="打开 GitHub 项目">
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.02c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.08 1.84 2.82 1.31 3.51 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23A11.47 11.47 0 0 1 12 5.8c1.02 0 2.04.14 3 .41 2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .5Z"/>
+				</svg>
+			</a>
+		</div>
+	</header>
+
+	<nav class="tabs" aria-label="页面">
+		<button class="tab active" type="button" data-tab="config">配置</button>
+		<button class="tab" type="button" data-tab="diagnosis">诊断</button>
+		<button class="tab" type="button" data-tab="logs">日志</button>
+		<button class="tab" type="button" data-tab="report">报告</button>
+	</nav>
+
+	<main>
+		<section id="configPanel" class="tabPanel active">
+			<section class="summaryGrid" aria-label="状态总览">
+				<div class="metric">
+					<span>模块状态</span>
+					<strong id="moduleState">未知</strong>
+				</div>
+				<div class="metric">
+					<span>作用模式</span>
+					<strong id="scopeState">未知</strong>
+				</div>
+				<div class="metric">
+					<span>隐藏路径</span>
+					<strong id="targetCount">0</strong>
+				</div>
+				<div class="metric">
+					<span>黑名单 UID</span>
+					<strong id="uidCount">0</strong>
+				</div>
+			</section>
+
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>隐藏路径</h2>
+					<button id="addPathBtn" type="button">添加</button>
+				</div>
+				<div id="pathList" class="stack"></div>
+			</section>
+
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>作用范围</h2>
+				</div>
+				<div class="segmented">
+					<label>
+						<input type="radio" name="scope" value="global">
+						<span>全局</span>
+					</label>
+					<label>
+						<input type="radio" name="scope" value="deny" checked>
+						<span>黑名单</span>
+					</label>
+				</div>
+				<label class="switchRow">
+					<span>隐藏上级目录列表项</span>
+					<input id="hideDirentsInput" type="checkbox" checked>
+				</label>
+			</section>
+
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>应用黑名单</h2>
+					<div class="inlineControls">
+						<label class="miniToggle">
+							<input id="showSystemInput" type="checkbox">
+							<span>系统应用</span>
+						</label>
+						<button id="loadAppsBtn" type="button">加载</button>
+					</div>
+				</div>
+				<input id="searchInput" class="search" type="search" placeholder="搜索包名">
+				<div id="appList" class="appList"></div>
+			</section>
+
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>直接填写 UID</h2>
+				</div>
+				<textarea id="denyUidsInput" rows="4" spellcheck="false" placeholder="每行一个 UID"></textarea>
+			</section>
+
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>开机等待秒数</h2>
+				</div>
+				<label class="switchRow">
+					<span>路径出现 + 包名解析的总等待秒数</span>
+					<input id="waitSecondsInput" type="number" min="1" max="600" step="1" inputmode="numeric" value="60">
+				</label>
+				<p class="hint">默认 60 秒。开机时 service.sh 会用这一段时间等待隐藏路径出现，并在 deny 模式下等待包名解析为 UID。两个阶段共用同一段预算，到期就跳过加载。包名解析慢的设备可以调大。</p>
+			</section>
+		</section>
+
+		<section id="diagnosisPanel" class="tabPanel">
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>健康检查</h2>
+					<button id="runDiagnosticBtn" type="button">生成诊断</button>
+				</div>
+				<ul id="healthList" class="healthList"></ul>
+			</section>
+
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>快速操作</h2>
+				</div>
+				<div class="buttonGrid">
+					<button id="validateConfigBtn" type="button">校验配置</button>
+					<button id="copyReportBtn" type="button">复制诊断报告</button>
+					<button id="resetDefaultsBtn" type="button">恢复默认配置</button>
+				</div>
+			</section>
+		</section>
+
+		<section id="logsPanel" class="tabPanel">
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>日志分页</h2>
+					<button id="refreshLogsBtn" type="button">刷新日志</button>
+				</div>
+				<div class="logTabs">
+					<button class="logTab active" type="button" data-log="status">状态</button>
+					<button class="logTab" type="button" data-log="config">配置</button>
+					<button class="logTab" type="button" data-log="kernel">内核</button>
+					<button class="logTab" type="button" data-log="script">脚本</button>
+				</div>
+				<textarea id="logOutput" class="monoBox" rows="16" readonly></textarea>
+				<div class="pager">
+					<button id="prevLogBtn" type="button">上一页</button>
+					<span id="logPageInfo">0 / 0</span>
+					<button id="nextLogBtn" type="button">下一页</button>
+				</div>
+			</section>
+		</section>
+
+		<section id="reportPanel" class="tabPanel">
+			<section class="panel">
+				<div class="sectionTitle">
+					<h2>诊断报告</h2>
+					<button id="copyReportBtn2" type="button">复制</button>
+				</div>
+				<textarea id="reportOutput" class="monoBox" rows="20" readonly placeholder="点击“生成诊断”后这里会出现可复制报告"></textarea>
+			</section>
+		</section>
+	</main>
+
+	<footer class="actions">
+		<button id="saveBtn" type="button">保存配置</button>
+		<button id="pauseBtn" type="button">暂停隐藏</button>
+		<button id="reloadBtn" class="primary" type="button">保存并热重载</button>
+	</footer>
+
+	<div id="toast" class="toast" hidden></div>
+	<script src="./app.js"></script>
+</body>
+</html>
